@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
-import { ensureOpenClawModelsJson } from "./models-config.js";
+import type { LocalClawConfig } from "../config/config.js";
+import { ensureLocalClawModelsJson } from "./models-config.js";
 import { createSystemPromptOverride } from "./pi-embedded-runner.js";
 
 vi.mock("@mariozechner/pi-ai", async () => {
@@ -67,10 +67,10 @@ const _makeOpenAiConfig = (modelIds: string[]) =>
         },
       },
     },
-  }) satisfies OpenClawConfig;
+  }) satisfies LocalClawConfig;
 
-const _ensureModels = (cfg: OpenClawConfig, agentDir: string) =>
-  ensureOpenClawModelsJson(cfg, agentDir) as unknown;
+const _ensureModels = (cfg: LocalClawConfig, agentDir: string) =>
+  ensureLocalClawModelsJson(cfg, agentDir) as unknown;
 
 const _textFromContent = (content: unknown) => {
   if (typeof content === "string") {

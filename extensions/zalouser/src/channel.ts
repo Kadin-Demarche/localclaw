@@ -4,9 +4,9 @@ import type {
   ChannelDock,
   ChannelGroupContext,
   ChannelPlugin,
-  OpenClawConfig,
+  LocalClawConfig,
   GroupToolPolicyConfig,
-} from "openclaw/plugin-sdk";
+} from "localclaw/plugin-sdk";
 import {
   applyAccountNameToChannelSection,
   buildChannelConfigSchema,
@@ -16,7 +16,7 @@ import {
   migrateBaseNameToDefaultAccount,
   normalizeAccountId,
   setAccountEnabledInConfigSection,
-} from "openclaw/plugin-sdk";
+} from "localclaw/plugin-sdk";
 import type { ZcaFriend, ZcaGroup, ZcaUserInfo } from "./types.js";
 import {
   listZalouserAccountIds,
@@ -257,7 +257,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
               enabled: true,
             },
           },
-        } as OpenClawConfig;
+        } as LocalClawConfig;
       }
       return {
         ...next,
@@ -275,7 +275,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
             },
           },
         },
-      } as OpenClawConfig;
+      } as LocalClawConfig;
     },
   },
   messaging: {
@@ -505,7 +505,7 @@ export const zalouserPlugin: ChannelPlugin<ResolvedZalouserAccount> = {
       const ok = await checkZcaInstalled();
       if (!ok) {
         throw new Error(
-          "Missing dependency: `zca` not found in PATH. See docs.openclaw.ai/channels/zalouser",
+          "Missing dependency: `zca` not found in PATH. See docs.localclaw.ai/channels/zalouser",
         );
       }
       runtime.log(

@@ -1,7 +1,7 @@
 {
-  "name": "@openclaw/voice-call",
+  "name": "@localclaw/voice-call",
   "version": "2026.2.6",
-  "description": "OpenClaw voice-call plugin",
+  "description": "LocalClaw voice-call plugin",
   "type": "module",
   "dependencies": {
     "@sinclair/typebox": "0.34.48",
@@ -9,9 +9,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "localclaw": "workspace:*"
   },
-  "openclaw": {
+  "localclaw": {
     "extensions": [
       "./index.ts"
     ]

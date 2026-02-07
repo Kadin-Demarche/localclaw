@@ -1,8 +1,8 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { LocalClawConfig } from "../../config/config.js";
 import type { AuthProfileStore } from "./types.js";
 
 export function resolveAuthProfileDisplayLabel(params: {
-  cfg?: OpenClawConfig;
+  cfg?: LocalClawConfig;
   store: AuthProfileStore;
   profileId: string;
 }): string {

@@ -1,18 +1,18 @@
 // swift-tools-version: 6.2
-// Package manifest for the OpenClaw macOS companion (menu bar app + IPC library).
+// Package manifest for the LocalClaw macOS companion (menu bar app + IPC library).
 
 import PackageDescription
 
 let package = Package(
-    name: "OpenClaw",
+    name: "LocalClaw",
     platforms: [
         .macOS(.v15),
     ],
     products: [
-        .library(name: "OpenClawIPC", targets: ["OpenClawIPC"]),
-        .library(name: "OpenClawDiscovery", targets: ["OpenClawDiscovery"]),
-        .executable(name: "OpenClaw", targets: ["OpenClaw"]),
-        .executable(name: "openclaw-mac", targets: ["OpenClawMacCLI"]),
+        .library(name: "LocalClawIPC", targets: ["LocalClawIPC"]),
+        .library(name: "LocalClawDiscovery", targets: ["LocalClawDiscovery"]),
+        .executable(name: "LocalClaw", targets: ["LocalClaw"]),
+        .executable(name: "localclaw-mac", targets: ["LocalClawMacCLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/orchetect/MenuBarExtraAccess", exact: "1.2.2"),
@@ -20,33 +20,33 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.8.0"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.8.1"),
         .package(url: "https://github.com/steipete/Peekaboo.git", branch: "main"),
-        .package(path: "../shared/OpenClawKit"),
+        .package(path: "../shared/LocalClawKit"),
         .package(path: "../../Swabble"),
     ],
     targets: [
         .target(
-            name: "OpenClawIPC",
+            name: "LocalClawIPC",
             dependencies: [],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
             ]),
         .target(
-            name: "OpenClawDiscovery",
+            name: "LocalClawDiscovery",
             dependencies: [
-                .product(name: "OpenClawKit", package: "OpenClawKit"),
+                .product(name: "LocalClawKit", package: "LocalClawKit"),
             ],
-            path: "Sources/OpenClawDiscovery",
+            path: "Sources/LocalClawDiscovery",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
             ]),
         .executableTarget(
-            name: "OpenClaw",
+            name: "LocalClaw",
             dependencies: [
-                "OpenClawIPC",
-                "OpenClawDiscovery",
-                .product(name: "OpenClawKit", package: "OpenClawKit"),
-                .product(name: "OpenClawChatUI", package: "OpenClawKit"),
-                .product(name: "OpenClawProtocol", package: "OpenClawKit"),
+                "LocalClawIPC",
+                "LocalClawDiscovery",
+                .product(name: "LocalClawKit", package: "LocalClawKit"),
+                .product(name: "LocalClawChatUI", package: "LocalClawKit"),
+                .product(name: "LocalClawProtocol", package: "LocalClawKit"),
                 .product(name: "SwabbleKit", package: "swabble"),
                 .product(name: "MenuBarExtraAccess", package: "MenuBarExtraAccess"),
                 .product(name: "Subprocess", package: "swift-subprocess"),
@@ -59,30 +59,30 @@ let package = Package(
                 "Resources/Info.plist",
             ],
             resources: [
-                .copy("Resources/OpenClaw.icns"),
+                .copy("Resources/LocalClaw.icns"),
                 .copy("Resources/DeviceModels"),
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
             ]),
         .executableTarget(
-            name: "OpenClawMacCLI",
+            name: "LocalClawMacCLI",
             dependencies: [
-                "OpenClawDiscovery",
-                .product(name: "OpenClawKit", package: "OpenClawKit"),
-                .product(name: "OpenClawProtocol", package: "OpenClawKit"),
+                "LocalClawDiscovery",
+                .product(name: "LocalClawKit", package: "LocalClawKit"),
+                .product(name: "LocalClawProtocol", package: "LocalClawKit"),
             ],
-            path: "Sources/OpenClawMacCLI",
+            path: "Sources/LocalClawMacCLI",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
             ]),
         .testTarget(
-            name: "OpenClawIPCTests",
+            name: "LocalClawIPCTests",
             dependencies: [
-                "OpenClawIPC",
-                "OpenClaw",
-                "OpenClawDiscovery",
-                .product(name: "OpenClawProtocol", package: "OpenClawKit"),
+                "LocalClawIPC",
+                "LocalClaw",
+                "LocalClawDiscovery",
+                .product(name: "LocalClawProtocol", package: "LocalClawKit"),
                 .product(name: "SwabbleKit", package: "swabble"),
             ],
             swiftSettings: [

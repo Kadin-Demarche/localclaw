@@ -1,5 +1,5 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
+import type { LocalClawPluginApi } from "localclaw/plugin-sdk";
+import { emptyPluginConfigSchema } from "localclaw/plugin-sdk";
 import { discordPlugin } from "./src/channel.js";
 import { setDiscordRuntime } from "./src/runtime.js";
 
@@ -8,7 +8,7 @@ const plugin = {
   name: "Discord",
   description: "Discord channel plugin",
   configSchema: emptyPluginConfigSchema(),
-  register(api: OpenClawPluginApi) {
+  register(api: LocalClawPluginApi) {
     setDiscordRuntime(api.runtime);
     api.registerChannel({ plugin: discordPlugin });
   },

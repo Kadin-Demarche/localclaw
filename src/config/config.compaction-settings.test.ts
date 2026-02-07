@@ -6,10 +6,10 @@ import { withTempHome } from "./test-helpers.js";
 describe("config compaction settings", () => {
   it("preserves memory flush config values", async () => {
     await withTempHome(async (home) => {
-      const configDir = path.join(home, ".openclaw");
+      const configDir = path.join(home, ".localclaw");
       await fs.mkdir(configDir, { recursive: true });
       await fs.writeFile(
-        path.join(configDir, "openclaw.json"),
+        path.join(configDir, "localclaw.json"),
         JSON.stringify(
           {
             agents: {
@@ -48,10 +48,10 @@ describe("config compaction settings", () => {
 
   it("defaults compaction mode to safeguard", async () => {
     await withTempHome(async (home) => {
-      const configDir = path.join(home, ".openclaw");
+      const configDir = path.join(home, ".localclaw");
       await fs.mkdir(configDir, { recursive: true });
       await fs.writeFile(
-        path.join(configDir, "openclaw.json"),
+        path.join(configDir, "localclaw.json"),
         JSON.stringify(
           {
             agents: {
@@ -74,6 +74,66 @@ describe("config compaction settings", () => {
 
       expect(cfg.agents?.defaults?.compaction?.mode).toBe("safeguard");
       expect(cfg.agents?.defaults?.compaction?.reserveTokensFloor).toBe(9000);
+    });
+  });
+
+  it("sets adaptive reserveTokensFloor for constrained context windows", async () => {
+    await withTempHome(async (home) => {
+      const configDir = path.join(home, ".localclaw");
+      await fs.mkdir(configDir, { recursive: true });
+      await fs.writeFile(
+        path.join(configDir, "localclaw.json"),
+        JSON.stringify(
+          {
+            agents: {
+              defaults: {
+                contextTokens: 40960,
+                compaction: {},
+              },
+            },
+          },
+          null,
+          2,
+        ),
+        "utf-8",
+      );
+
+      vi.resetModules();
+      const { loadConfig } = await import("./config.js");
+      const cfg = loadConfig();
+
+      expect(cfg.agents?.defaults?.compaction?.mode).toBe("safeguard");
+      expect(cfg.agents?.defaults?.compaction?.reserveTokensFloor).toBe(12_288);
+    });
+  });
+
+  it("does not force adaptive reserveTokensFloor for large context windows", async () => {
+    await withTempHome(async (home) => {
+      const configDir = path.join(home, ".localclaw");
+      await fs.mkdir(configDir, { recursive: true });
+      await fs.writeFile(
+        path.join(configDir, "localclaw.json"),
+        JSON.stringify(
+          {
+            agents: {
+              defaults: {
+                contextTokens: 128000,
+                compaction: {},
+              },
+            },
+          },
+          null,
+          2,
+        ),
+        "utf-8",
+      );
+
+      vi.resetModules();
+      const { loadConfig } = await import("./config.js");
+      const cfg = loadConfig();
+
+      expect(cfg.agents?.defaults?.compaction?.mode).toBe("safeguard");
+      expect(cfg.agents?.defaults?.compaction?.reserveTokensFloor).toBeUndefined();
     });
   });
 });

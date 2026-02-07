@@ -1,12 +1,12 @@
 ---
-summary: "CLI reference for `openclaw nodes` (list/status/approve/invoke, camera/canvas/screen)"
+summary: "CLI reference for `localclaw nodes` (list/status/approve/invoke, camera/canvas/screen)"
 read_when:
   - You’re managing paired nodes (cameras, screen, canvas)
   - You need to approve requests or invoke node commands
 title: "nodes"
 ---
 
-# `openclaw nodes`
+# `localclaw nodes`
 
 Manage paired nodes (devices) and invoke node capabilities.
 
@@ -23,14 +23,14 @@ Common options:
 ## Common commands
 
 ```bash
-openclaw nodes list
-openclaw nodes list --connected
-openclaw nodes list --last-connected 24h
-openclaw nodes pending
-openclaw nodes approve <requestId>
-openclaw nodes status
-openclaw nodes status --connected
-openclaw nodes status --last-connected 24h
+localclaw nodes list
+localclaw nodes list --connected
+localclaw nodes list --last-connected 24h
+localclaw nodes pending
+localclaw nodes approve <requestId>
+localclaw nodes status
+localclaw nodes status --connected
+localclaw nodes status --last-connected 24h
 ```
 
 `nodes list` prints pending/paired tables. Paired rows include the most recent connect age (Last Connect).
@@ -40,10 +40,10 @@ filter to nodes that connected within a duration (e.g. `24h`, `7d`).
 ## Invoke / run
 
 ```bash
-openclaw nodes invoke --node <id|name|ip> --command <command> --params <json>
-openclaw nodes run --node <id|name|ip> <command...>
-openclaw nodes run --raw "git status"
-openclaw nodes run --agent main --node <id|name|ip> --raw "git status"
+localclaw nodes invoke --node <id|name|ip> --command <command> --params <json>
+localclaw nodes run --node <id|name|ip> <command...>
+localclaw nodes run --raw "git status"
+localclaw nodes run --agent main --node <id|name|ip> --raw "git status"
 ```
 
 Invoke flags:

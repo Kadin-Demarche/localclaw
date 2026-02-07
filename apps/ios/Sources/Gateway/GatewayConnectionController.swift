@@ -1,4 +1,4 @@
-import OpenClawKit
+import LocalClawKit
 import Darwin
 import Foundation
 import Network
@@ -283,7 +283,7 @@ final class GatewayConnectionController {
             caps: self.currentCaps(),
             commands: self.currentCommands(),
             permissions: [:],
-            clientId: "openclaw-ios",
+            clientId: "localclaw-ios",
             clientMode: "node",
             clientDisplayName: displayName)
     }
@@ -304,51 +304,51 @@ final class GatewayConnectionController {
     }
 
     private func currentCaps() -> [String] {
-        var caps = [OpenClawCapability.canvas.rawValue, OpenClawCapability.screen.rawValue]
+        var caps = [LocalClawCapability.canvas.rawValue, LocalClawCapability.screen.rawValue]
 
         // Default-on: if the key doesn't exist yet, treat it as enabled.
         let cameraEnabled =
             UserDefaults.standard.object(forKey: "camera.enabled") == nil
                 ? true
                 : UserDefaults.standard.bool(forKey: "camera.enabled")
-        if cameraEnabled { caps.append(OpenClawCapability.camera.rawValue) }
+        if cameraEnabled { caps.append(LocalClawCapability.camera.rawValue) }
 
         let voiceWakeEnabled = UserDefaults.standard.bool(forKey: VoiceWakePreferences.enabledKey)
-        if voiceWakeEnabled { caps.append(OpenClawCapability.voiceWake.rawValue) }
+        if voiceWakeEnabled { caps.append(LocalClawCapability.voiceWake.rawValue) }
 
         let locationModeRaw = UserDefaults.standard.string(forKey: "location.enabledMode") ?? "off"
-        let locationMode = OpenClawLocationMode(rawValue: locationModeRaw) ?? .off
-        if locationMode != .off { caps.append(OpenClawCapability.location.rawValue) }
+        let locationMode = LocalClawLocationMode(rawValue: locationModeRaw) ?? .off
+        if locationMode != .off { caps.append(LocalClawCapability.location.rawValue) }
 
         return caps
     }
 
     private func currentCommands() -> [String] {
         var commands: [String] = [
-            OpenClawCanvasCommand.present.rawValue,
-            OpenClawCanvasCommand.hide.rawValue,
-            OpenClawCanvasCommand.navigate.rawValue,
-            OpenClawCanvasCommand.evalJS.rawValue,
-            OpenClawCanvasCommand.snapshot.rawValue,
-            OpenClawCanvasA2UICommand.push.rawValue,
-            OpenClawCanvasA2UICommand.pushJSONL.rawValue,
-            OpenClawCanvasA2UICommand.reset.rawValue,
-            OpenClawScreenCommand.record.rawValue,
-            OpenClawSystemCommand.notify.rawValue,
-            OpenClawSystemCommand.which.rawValue,
-            OpenClawSystemCommand.run.rawValue,
-            OpenClawSystemCommand.execApprovalsGet.rawValue,
-            OpenClawSystemCommand.execApprovalsSet.rawValue,
+            LocalClawCanvasCommand.present.rawValue,
+            LocalClawCanvasCommand.hide.rawValue,
+            LocalClawCanvasCommand.navigate.rawValue,
+            LocalClawCanvasCommand.evalJS.rawValue,
+            LocalClawCanvasCommand.snapshot.rawValue,
+            LocalClawCanvasA2UICommand.push.rawValue,
+            LocalClawCanvasA2UICommand.pushJSONL.rawValue,
+            LocalClawCanvasA2UICommand.reset.rawValue,
+            LocalClawScreenCommand.record.rawValue,
+            LocalClawSystemCommand.notify.rawValue,
+            LocalClawSystemCommand.which.rawValue,
+            LocalClawSystemCommand.run.rawValue,
+            LocalClawSystemCommand.execApprovalsGet.rawValue,
+            LocalClawSystemCommand.execApprovalsSet.rawValue,
         ]
 
         let caps = Set(self.currentCaps())
-        if caps.contains(OpenClawCapability.camera.rawValue) {
-            commands.append(OpenClawCameraCommand.list.rawValue)
-            commands.append(OpenClawCameraCommand.snap.rawValue)
-            commands.append(OpenClawCameraCommand.clip.rawValue)
+        if caps.contains(LocalClawCapability.camera.rawValue) {
+            commands.append(LocalClawCameraCommand.list.rawValue)
+            commands.append(LocalClawCameraCommand.snap.rawValue)
+            commands.append(LocalClawCameraCommand.clip.rawValue)
         }
-        if caps.contains(OpenClawCapability.location.rawValue) {
-            commands.append(OpenClawLocationCommand.get.rawValue)
+        if caps.contains(LocalClawCapability.location.rawValue) {
+            commands.append(LocalClawLocationCommand.get.rawValue)
         }
 
         return commands

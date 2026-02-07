@@ -65,7 +65,7 @@ function createHarness(overrides?: {
     channelsConfig: overrides?.channelsConfig,
     slashCommand: {
       enabled: true,
-      name: "openclaw",
+      name: "localclaw",
       ephemeral: true,
       sessionPrefix: "slack:slash",
     },

@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/telegram",
+  "name": "@localclaw/telegram",
   "version": "2026.2.6",
-  "description": "OpenClaw Telegram channel plugin",
+  "description": "LocalClaw Telegram channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "localclaw": "workspace:*"
   },
-  "openclaw": {
+  "localclaw": {
     "extensions": [
       "./index.ts"
     ]

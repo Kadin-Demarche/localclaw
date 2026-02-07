@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "./types.js";
+import type { LocalClawConfig } from "./types.js";
 import type { ModelDefinitionConfig } from "./types.models.js";
 import { DEFAULT_CONTEXT_TOKENS } from "../agents/defaults.js";
 import { parseModelRef } from "../agents/model-selection.js";
@@ -10,6 +10,7 @@ type WarnState = { warned: boolean };
 let defaultWarnState: WarnState = { warned: false };
 
 type AnthropicAuthDefaultsMode = "api_key" | "oauth";
+type AgentDefaultsConfigLike = NonNullable<NonNullable<LocalClawConfig["agents"]>["defaults"]>;
 
 const DEFAULT_MODEL_ALIASES: Readonly<Record<string, string>> = {
   // Anthropic (pi-ai catalog uses "latest" ids without date suffix)
@@ -33,6 +34,13 @@ const DEFAULT_MODEL_COST: ModelDefinitionConfig["cost"] = {
 };
 const DEFAULT_MODEL_INPUT: ModelDefinitionConfig["input"] = ["text"];
 const DEFAULT_MODEL_MAX_TOKENS = 8192;
+const ANTHROPIC_DEFAULT_CACHE_TTL = "1h";
+const LOCAL_CONTEXT_PRUNING_DEFAULT_TTL = "20m";
+const CONSTRAINED_CONTEXT_WINDOW_MAX_TOKENS = 64_000;
+const MIN_ADAPTIVE_COMPACTION_RESERVE_TOKENS = 8_000;
+const MAX_ADAPTIVE_COMPACTION_RESERVE_TOKENS = 20_000;
+const ADAPTIVE_COMPACTION_RESERVE_RATIO = 0.3;
+const LOCAL_PROVIDER_IDS = new Set(["ollama", "lmstudio", "local", "vllm", "litellm"]);
 
 type ModelDefinitionLike = Partial<ModelDefinitionConfig> &
   Pick<ModelDefinitionConfig, "id" | "name">;
@@ -53,7 +61,7 @@ function resolveModelCost(
   };
 }
 
-function resolveAnthropicDefaultAuthMode(cfg: OpenClawConfig): AnthropicAuthDefaultsMode | null {
+function resolveAnthropicDefaultAuthMode(cfg: LocalClawConfig): AnthropicAuthDefaultsMode | null {
   const profiles = cfg.auth?.profiles ?? {};
   const anthropicProfiles = Object.entries(profiles).filter(
     ([, profile]) => profile?.provider === "anthropic",
@@ -105,12 +113,103 @@ function resolvePrimaryModelRef(raw?: string): string | null {
   return DEFAULT_MODEL_ALIASES[aliasKey] ?? trimmed;
 }
 
+function isLikelyLocalProviderId(provider: string): boolean {
+  return LOCAL_PROVIDER_IDS.has(provider.trim().toLowerCase());
+}
+
+function isLikelyLoopbackHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host === "0.0.0.0" ||
+    host === "[::1]"
+  );
+}
+
+function isLikelyLocalBaseUrl(baseUrl?: string): boolean {
+  if (!baseUrl || typeof baseUrl !== "string") {
+    return false;
+  }
+  try {
+    const parsed = new URL(baseUrl);
+    return isLikelyLoopbackHost(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function hasLikelyLocalModelSetup(cfg: LocalClawConfig): boolean {
+  if (process.env.OLLAMA_API_KEY?.trim()) {
+    return true;
+  }
+
+  const providers = cfg.models?.providers ?? {};
+  for (const [providerId, provider] of Object.entries(providers)) {
+    if (isLikelyLocalProviderId(providerId)) {
+      return true;
+    }
+    if (isLikelyLocalBaseUrl(provider?.baseUrl)) {
+      return true;
+    }
+  }
+
+  const authProfiles = cfg.auth?.profiles ?? {};
+  for (const profile of Object.values(authProfiles)) {
+    const provider = profile?.provider;
+    if (typeof provider === "string" && isLikelyLocalProviderId(provider)) {
+      return true;
+    }
+  }
+
+  const primary = resolvePrimaryModelRef(cfg.agents?.defaults?.model?.primary ?? undefined);
+  if (!primary) {
+    return false;
+  }
+  const parsedPrimary = parseModelRef(primary, "anthropic");
+  return parsedPrimary ? isLikelyLocalProviderId(parsedPrimary.provider) : false;
+}
+
+function resolveConfiguredContextWindowTokens(params: {
+  cfg: LocalClawConfig;
+  defaults: AgentDefaultsConfigLike;
+}): number | null {
+  if (isPositiveNumber(params.defaults.contextTokens)) {
+    return Math.floor(params.defaults.contextTokens);
+  }
+
+  const primary = resolvePrimaryModelRef(params.defaults.model?.primary ?? undefined);
+  if (!primary) {
+    return null;
+  }
+  const parsed = parseModelRef(primary, "anthropic");
+  if (!parsed) {
+    return null;
+  }
+  const provider = params.cfg.models?.providers?.[parsed.provider];
+  const models = provider?.models;
+  if (!Array.isArray(models)) {
+    return null;
+  }
+  const model = models.find((entry) => entry.id === parsed.model);
+  return isPositiveNumber(model?.contextWindow) ? Math.floor(model.contextWindow) : null;
+}
+
+function resolveAdaptiveCompactionReserveTokensFloor(contextWindowTokens: number): number {
+  const proportional = Math.floor(contextWindowTokens * ADAPTIVE_COMPACTION_RESERVE_RATIO);
+  return Math.max(
+    MIN_ADAPTIVE_COMPACTION_RESERVE_TOKENS,
+    Math.min(MAX_ADAPTIVE_COMPACTION_RESERVE_TOKENS, proportional),
+  );
+}
+
 export type SessionDefaultsOptions = {
   warn?: (message: string) => void;
   warnState?: WarnState;
 };
 
-export function applyMessageDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyMessageDefaults(cfg: LocalClawConfig): LocalClawConfig {
   const messages = cfg.messages;
   const hasAckScope = messages?.ackReactionScope !== undefined;
   if (hasAckScope) {
@@ -126,9 +225,9 @@ export function applyMessageDefaults(cfg: OpenClawConfig): OpenClawConfig {
 }
 
 export function applySessionDefaults(
-  cfg: OpenClawConfig,
+  cfg: LocalClawConfig,
   options: SessionDefaultsOptions = {},
-): OpenClawConfig {
+): LocalClawConfig {
   const session = cfg.session;
   if (!session || session.mainKey === undefined) {
     return cfg;
@@ -138,7 +237,7 @@ export function applySessionDefaults(
   const warn = options.warn ?? console.warn;
   const warnState = options.warnState ?? defaultWarnState;
 
-  const next: OpenClawConfig = {
+  const next: LocalClawConfig = {
     ...cfg,
     session: { ...session, mainKey: "main" },
   };
@@ -151,7 +250,7 @@ export function applySessionDefaults(
   return next;
 }
 
-export function applyTalkApiKey(config: OpenClawConfig): OpenClawConfig {
+export function applyTalkApiKey(config: LocalClawConfig): LocalClawConfig {
   const resolved = resolveTalkApiKey();
   if (!resolved) {
     return config;
@@ -169,7 +268,7 @@ export function applyTalkApiKey(config: OpenClawConfig): OpenClawConfig {
   };
 }
 
-export function applyModelDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyModelDefaults(cfg: LocalClawConfig): LocalClawConfig {
   let mutated = false;
   let nextCfg = cfg;
 
@@ -290,7 +389,7 @@ export function applyModelDefaults(cfg: OpenClawConfig): OpenClawConfig {
   };
 }
 
-export function applyAgentDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyAgentDefaults(cfg: LocalClawConfig): LocalClawConfig {
   const agents = cfg.agents;
   const defaults = agents?.defaults;
   const hasMax =
@@ -331,7 +430,7 @@ export function applyAgentDefaults(cfg: OpenClawConfig): OpenClawConfig {
   };
 }
 
-export function applyLoggingDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyLoggingDefaults(cfg: LocalClawConfig): LocalClawConfig {
   const logging = cfg.logging;
   if (!logging) {
     return cfg;
@@ -348,14 +447,15 @@ export function applyLoggingDefaults(cfg: OpenClawConfig): OpenClawConfig {
   };
 }
 
-export function applyContextPruningDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyContextPruningDefaults(cfg: LocalClawConfig): LocalClawConfig {
   const defaults = cfg.agents?.defaults;
   if (!defaults) {
     return cfg;
   }
 
   const authMode = resolveAnthropicDefaultAuthMode(cfg);
-  if (!authMode) {
+  const hasLocalSetup = hasLikelyLocalModelSetup(cfg);
+  if (!authMode && !hasLocalSetup) {
     return cfg;
   }
 
@@ -368,12 +468,14 @@ export function applyContextPruningDefaults(cfg: OpenClawConfig): OpenClawConfig
     nextDefaults.contextPruning = {
       ...contextPruning,
       mode: "cache-ttl",
-      ttl: defaults.contextPruning?.ttl ?? "1h",
+      ttl:
+        defaults.contextPruning?.ttl ??
+        (authMode ? ANTHROPIC_DEFAULT_CACHE_TTL : LOCAL_CONTEXT_PRUNING_DEFAULT_TTL),
     };
     mutated = true;
   }
 
-  if (defaults.heartbeat?.every === undefined) {
+  if (authMode && defaults.heartbeat?.every === undefined) {
     nextDefaults.heartbeat = {
       ...heartbeat,
       every: authMode === "oauth" ? "1h" : "30m",
@@ -439,13 +541,34 @@ export function applyContextPruningDefaults(cfg: OpenClawConfig): OpenClawConfig
   };
 }
 
-export function applyCompactionDefaults(cfg: OpenClawConfig): OpenClawConfig {
+export function applyCompactionDefaults(cfg: LocalClawConfig): LocalClawConfig {
   const defaults = cfg.agents?.defaults;
   if (!defaults) {
     return cfg;
   }
-  const compaction = defaults?.compaction;
-  if (compaction?.mode) {
+  const compaction = defaults.compaction ?? {};
+  const resolvedContextWindowTokens = resolveConfiguredContextWindowTokens({ cfg, defaults });
+
+  let mutated = false;
+  const nextCompaction = { ...compaction };
+
+  if (!compaction.mode) {
+    nextCompaction.mode = "safeguard";
+    mutated = true;
+  }
+
+  if (
+    compaction.reserveTokensFloor === undefined &&
+    resolvedContextWindowTokens !== null &&
+    resolvedContextWindowTokens <= CONSTRAINED_CONTEXT_WINDOW_MAX_TOKENS
+  ) {
+    nextCompaction.reserveTokensFloor = resolveAdaptiveCompactionReserveTokensFloor(
+      resolvedContextWindowTokens,
+    );
+    mutated = true;
+  }
+
+  if (!mutated) {
     return cfg;
   }
 
@@ -455,10 +578,7 @@ export function applyCompactionDefaults(cfg: OpenClawConfig): OpenClawConfig {
       ...cfg.agents,
       defaults: {
         ...defaults,
-        compaction: {
-          ...compaction,
-          mode: "safeguard",
-        },
+        compaction: nextCompaction,
       },
     },
   };

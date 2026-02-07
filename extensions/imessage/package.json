@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/imessage",
+  "name": "@localclaw/imessage",
   "version": "2026.2.6",
-  "description": "OpenClaw iMessage channel plugin",
+  "description": "LocalClaw iMessage channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "localclaw": "workspace:*"
   },
-  "openclaw": {
+  "localclaw": {
     "extensions": [
       "./index.ts"
     ]

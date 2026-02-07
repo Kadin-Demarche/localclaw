@@ -102,13 +102,13 @@ export function extractMSTeamsPollVote(
     return null;
   }
   const pollId =
-    readNestedString(value, ["openclawPollId"]) ??
+    readNestedString(value, ["localclawPollId"]) ??
     readNestedString(value, ["pollId"]) ??
-    readNestedString(value, ["openclaw", "pollId"]) ??
-    readNestedString(value, ["openclaw", "poll", "id"]) ??
-    readNestedString(value, ["data", "openclawPollId"]) ??
+    readNestedString(value, ["localclaw", "pollId"]) ??
+    readNestedString(value, ["localclaw", "poll", "id"]) ??
+    readNestedString(value, ["data", "localclawPollId"]) ??
     readNestedString(value, ["data", "pollId"]) ??
-    readNestedString(value, ["data", "openclaw", "pollId"]);
+    readNestedString(value, ["data", "localclaw", "pollId"]);
   if (!pollId) {
     return null;
   }
@@ -185,14 +185,14 @@ export function buildMSTeamsPollCard(params: {
         type: "Action.Submit",
         title: "Vote",
         data: {
-          openclawPollId: pollId,
+          localclawPollId: pollId,
           pollId,
         },
         msteams: {
           type: "messageBack",
-          text: "openclaw poll vote",
+          text: "localclaw poll vote",
           displayText: "Vote recorded",
-          value: { openclawPollId: pollId, pollId },
+          value: { localclawPollId: pollId, pollId },
         },
       },
     ],

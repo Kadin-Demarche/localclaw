@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import type { OpenClawConfig } from "../config/config.js";
+import type { LocalClawConfig } from "../config/config.js";
 import {
   parseModelRef,
   resolveModelRefFromString,
@@ -7,6 +7,7 @@ import {
   buildModelAliasIndex,
   normalizeProviderId,
   modelKey,
+  resolveThinkingDefault,
 } from "./model-selection.js";
 
 describe("model-selection", () => {
@@ -61,7 +62,7 @@ describe("model-selection", () => {
 
   describe("buildModelAliasIndex", () => {
     it("should build alias index from config", () => {
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<LocalClawConfig> = {
         agents: {
           defaults: {
             models: {
@@ -73,7 +74,7 @@ describe("model-selection", () => {
       };
 
       const index = buildModelAliasIndex({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as LocalClawConfig,
         defaultProvider: "anthropic",
       });
 
@@ -117,7 +118,7 @@ describe("model-selection", () => {
   describe("resolveConfiguredModelRef", () => {
     it("should fall back to anthropic and warn if provider is missing for non-alias", () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const cfg: Partial<OpenClawConfig> = {
+      const cfg: Partial<LocalClawConfig> = {
         agents: {
           defaults: {
             model: "claude-3-5-sonnet",
@@ -126,7 +127,7 @@ describe("model-selection", () => {
       };
 
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as LocalClawConfig,
         defaultProvider: "google",
         defaultModel: "gemini-pro",
       });
@@ -139,13 +140,91 @@ describe("model-selection", () => {
     });
 
     it("should use default provider/model if config is empty", () => {
-      const cfg: Partial<OpenClawConfig> = {};
+      const cfg: Partial<LocalClawConfig> = {};
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg as LocalClawConfig,
         defaultProvider: "openai",
         defaultModel: "gpt-4",
       });
       expect(result).toEqual({ provider: "openai", model: "gpt-4" });
+    });
+  });
+
+  describe("resolveThinkingDefault", () => {
+    it("uses configured default when provided", () => {
+      const cfg: Partial<LocalClawConfig> = {
+        agents: {
+          defaults: {
+            thinkingDefault: "high",
+          },
+        },
+      };
+
+      const result = resolveThinkingDefault({
+        cfg: cfg as LocalClawConfig,
+        provider: "openai",
+        model: "gpt-5.2",
+        catalog: [{ provider: "openai", id: "gpt-5.2", name: "GPT-5.2", reasoning: true }],
+      });
+
+      expect(result).toBe("high");
+    });
+
+    it("defaults constrained reasoning models to minimal thinking", () => {
+      const result = resolveThinkingDefault({
+        cfg: {} as LocalClawConfig,
+        provider: "lmstudio",
+        model: "qwen3-14b",
+        catalog: [
+          {
+            provider: "lmstudio",
+            id: "qwen3-14b",
+            name: "Qwen3 14B",
+            reasoning: true,
+            contextWindow: 40960,
+          },
+        ],
+      });
+
+      expect(result).toBe("minimal");
+    });
+
+    it("keeps low thinking default for large-window reasoning models", () => {
+      const result = resolveThinkingDefault({
+        cfg: {} as LocalClawConfig,
+        provider: "anthropic",
+        model: "claude-opus-4-6",
+        catalog: [
+          {
+            provider: "anthropic",
+            id: "claude-opus-4-6",
+            name: "Claude Opus 4.6",
+            reasoning: true,
+            contextWindow: 200000,
+          },
+        ],
+      });
+
+      expect(result).toBe("low");
+    });
+
+    it("defaults non-reasoning models to off", () => {
+      const result = resolveThinkingDefault({
+        cfg: {} as LocalClawConfig,
+        provider: "lmstudio",
+        model: "qwen3-14b",
+        catalog: [
+          {
+            provider: "lmstudio",
+            id: "qwen3-14b",
+            name: "Qwen3 14B",
+            reasoning: false,
+            contextWindow: 40960,
+          },
+        ],
+      });
+
+      expect(result).toBe("off");
     });
   });
 });

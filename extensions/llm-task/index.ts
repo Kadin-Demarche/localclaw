@@ -1,6 +1,6 @@
-import type { OpenClawPluginApi } from "../../src/plugins/types.js";
+import type { LocalClawPluginApi } from "../../src/plugins/types.js";
 import { createLlmTaskTool } from "./src/llm-task-tool.js";
 
-export default function register(api: OpenClawPluginApi) {
+export default function register(api: LocalClawPluginApi) {
   api.registerTool(createLlmTaskTool(api), { optional: true });
 }

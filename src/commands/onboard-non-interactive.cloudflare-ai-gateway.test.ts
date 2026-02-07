@@ -7,27 +7,27 @@ describe("onboard (non-interactive): Cloudflare AI Gateway", () => {
   it("stores the API key and configures the default model", async () => {
     const prev = {
       home: process.env.HOME,
-      stateDir: process.env.OPENCLAW_STATE_DIR,
-      configPath: process.env.OPENCLAW_CONFIG_PATH,
-      skipChannels: process.env.OPENCLAW_SKIP_CHANNELS,
-      skipGmail: process.env.OPENCLAW_SKIP_GMAIL_WATCHER,
-      skipCron: process.env.OPENCLAW_SKIP_CRON,
-      skipCanvas: process.env.OPENCLAW_SKIP_CANVAS_HOST,
-      token: process.env.OPENCLAW_GATEWAY_TOKEN,
-      password: process.env.OPENCLAW_GATEWAY_PASSWORD,
+      stateDir: process.env.LOCALCLAW_STATE_DIR,
+      configPath: process.env.LOCALCLAW_CONFIG_PATH,
+      skipChannels: process.env.LOCALCLAW_SKIP_CHANNELS,
+      skipGmail: process.env.LOCALCLAW_SKIP_GMAIL_WATCHER,
+      skipCron: process.env.LOCALCLAW_SKIP_CRON,
+      skipCanvas: process.env.LOCALCLAW_SKIP_CANVAS_HOST,
+      token: process.env.LOCALCLAW_GATEWAY_TOKEN,
+      password: process.env.LOCALCLAW_GATEWAY_PASSWORD,
     };
 
-    process.env.OPENCLAW_SKIP_CHANNELS = "1";
-    process.env.OPENCLAW_SKIP_GMAIL_WATCHER = "1";
-    process.env.OPENCLAW_SKIP_CRON = "1";
-    process.env.OPENCLAW_SKIP_CANVAS_HOST = "1";
-    delete process.env.OPENCLAW_GATEWAY_TOKEN;
-    delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+    process.env.LOCALCLAW_SKIP_CHANNELS = "1";
+    process.env.LOCALCLAW_SKIP_GMAIL_WATCHER = "1";
+    process.env.LOCALCLAW_SKIP_CRON = "1";
+    process.env.LOCALCLAW_SKIP_CANVAS_HOST = "1";
+    delete process.env.LOCALCLAW_GATEWAY_TOKEN;
+    delete process.env.LOCALCLAW_GATEWAY_PASSWORD;
 
-    const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-onboard-cf-gateway-"));
+    const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "localclaw-onboard-cf-gateway-"));
     process.env.HOME = tempHome;
-    process.env.OPENCLAW_STATE_DIR = tempHome;
-    process.env.OPENCLAW_CONFIG_PATH = path.join(tempHome, "openclaw.json");
+    process.env.LOCALCLAW_STATE_DIR = tempHome;
+    process.env.LOCALCLAW_CONFIG_PATH = path.join(tempHome, "localclaw.json");
     vi.resetModules();
 
     const runtime = {
@@ -86,41 +86,43 @@ describe("onboard (non-interactive): Cloudflare AI Gateway", () => {
     } finally {
       await fs.rm(tempHome, { recursive: true, force: true });
       process.env.HOME = prev.home;
-      process.env.OPENCLAW_STATE_DIR = prev.stateDir;
-      process.env.OPENCLAW_CONFIG_PATH = prev.configPath;
-      process.env.OPENCLAW_SKIP_CHANNELS = prev.skipChannels;
-      process.env.OPENCLAW_SKIP_GMAIL_WATCHER = prev.skipGmail;
-      process.env.OPENCLAW_SKIP_CRON = prev.skipCron;
-      process.env.OPENCLAW_SKIP_CANVAS_HOST = prev.skipCanvas;
-      process.env.OPENCLAW_GATEWAY_TOKEN = prev.token;
-      process.env.OPENCLAW_GATEWAY_PASSWORD = prev.password;
+      process.env.LOCALCLAW_STATE_DIR = prev.stateDir;
+      process.env.LOCALCLAW_CONFIG_PATH = prev.configPath;
+      process.env.LOCALCLAW_SKIP_CHANNELS = prev.skipChannels;
+      process.env.LOCALCLAW_SKIP_GMAIL_WATCHER = prev.skipGmail;
+      process.env.LOCALCLAW_SKIP_CRON = prev.skipCron;
+      process.env.LOCALCLAW_SKIP_CANVAS_HOST = prev.skipCanvas;
+      process.env.LOCALCLAW_GATEWAY_TOKEN = prev.token;
+      process.env.LOCALCLAW_GATEWAY_PASSWORD = prev.password;
     }
   }, 60_000);
 
   it("infers auth choice from API key flags", async () => {
     const prev = {
       home: process.env.HOME,
-      stateDir: process.env.OPENCLAW_STATE_DIR,
-      configPath: process.env.OPENCLAW_CONFIG_PATH,
-      skipChannels: process.env.OPENCLAW_SKIP_CHANNELS,
-      skipGmail: process.env.OPENCLAW_SKIP_GMAIL_WATCHER,
-      skipCron: process.env.OPENCLAW_SKIP_CRON,
-      skipCanvas: process.env.OPENCLAW_SKIP_CANVAS_HOST,
-      token: process.env.OPENCLAW_GATEWAY_TOKEN,
-      password: process.env.OPENCLAW_GATEWAY_PASSWORD,
+      stateDir: process.env.LOCALCLAW_STATE_DIR,
+      configPath: process.env.LOCALCLAW_CONFIG_PATH,
+      skipChannels: process.env.LOCALCLAW_SKIP_CHANNELS,
+      skipGmail: process.env.LOCALCLAW_SKIP_GMAIL_WATCHER,
+      skipCron: process.env.LOCALCLAW_SKIP_CRON,
+      skipCanvas: process.env.LOCALCLAW_SKIP_CANVAS_HOST,
+      token: process.env.LOCALCLAW_GATEWAY_TOKEN,
+      password: process.env.LOCALCLAW_GATEWAY_PASSWORD,
     };
 
-    process.env.OPENCLAW_SKIP_CHANNELS = "1";
-    process.env.OPENCLAW_SKIP_GMAIL_WATCHER = "1";
-    process.env.OPENCLAW_SKIP_CRON = "1";
-    process.env.OPENCLAW_SKIP_CANVAS_HOST = "1";
-    delete process.env.OPENCLAW_GATEWAY_TOKEN;
-    delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+    process.env.LOCALCLAW_SKIP_CHANNELS = "1";
+    process.env.LOCALCLAW_SKIP_GMAIL_WATCHER = "1";
+    process.env.LOCALCLAW_SKIP_CRON = "1";
+    process.env.LOCALCLAW_SKIP_CANVAS_HOST = "1";
+    delete process.env.LOCALCLAW_GATEWAY_TOKEN;
+    delete process.env.LOCALCLAW_GATEWAY_PASSWORD;
 
-    const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-onboard-cf-gateway-infer-"));
+    const tempHome = await fs.mkdtemp(
+      path.join(os.tmpdir(), "localclaw-onboard-cf-gateway-infer-"),
+    );
     process.env.HOME = tempHome;
-    process.env.OPENCLAW_STATE_DIR = tempHome;
-    process.env.OPENCLAW_CONFIG_PATH = path.join(tempHome, "openclaw.json");
+    process.env.LOCALCLAW_STATE_DIR = tempHome;
+    process.env.LOCALCLAW_CONFIG_PATH = path.join(tempHome, "localclaw.json");
     vi.resetModules();
 
     const runtime = {
@@ -178,14 +180,14 @@ describe("onboard (non-interactive): Cloudflare AI Gateway", () => {
     } finally {
       await fs.rm(tempHome, { recursive: true, force: true });
       process.env.HOME = prev.home;
-      process.env.OPENCLAW_STATE_DIR = prev.stateDir;
-      process.env.OPENCLAW_CONFIG_PATH = prev.configPath;
-      process.env.OPENCLAW_SKIP_CHANNELS = prev.skipChannels;
-      process.env.OPENCLAW_SKIP_GMAIL_WATCHER = prev.skipGmail;
-      process.env.OPENCLAW_SKIP_CRON = prev.skipCron;
-      process.env.OPENCLAW_SKIP_CANVAS_HOST = prev.skipCanvas;
-      process.env.OPENCLAW_GATEWAY_TOKEN = prev.token;
-      process.env.OPENCLAW_GATEWAY_PASSWORD = prev.password;
+      process.env.LOCALCLAW_STATE_DIR = prev.stateDir;
+      process.env.LOCALCLAW_CONFIG_PATH = prev.configPath;
+      process.env.LOCALCLAW_SKIP_CHANNELS = prev.skipChannels;
+      process.env.LOCALCLAW_SKIP_GMAIL_WATCHER = prev.skipGmail;
+      process.env.LOCALCLAW_SKIP_CRON = prev.skipCron;
+      process.env.LOCALCLAW_SKIP_CANVAS_HOST = prev.skipCanvas;
+      process.env.LOCALCLAW_GATEWAY_TOKEN = prev.token;
+      process.env.LOCALCLAW_GATEWAY_PASSWORD = prev.password;
     }
   }, 60_000);
 });

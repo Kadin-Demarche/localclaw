@@ -1,5 +1,5 @@
 ---
-summary: "Run multiple OpenClaw Gateways on one host (isolation, ports, and profiles)"
+summary: "Run multiple LocalClaw Gateways on one host (isolation, ports, and profiles)"
 read_when:
   - Running more than one Gateway on the same machine
   - You need isolated config/state/ports per Gateway
@@ -12,8 +12,8 @@ Most setups should use one Gateway because a single Gateway can handle multiple 
 
 ## Isolation checklist (required)
 
-- `OPENCLAW_CONFIG_PATH` — per-instance config file
-- `OPENCLAW_STATE_DIR` — per-instance sessions, creds, caches
+- `LOCALCLAW_CONFIG_PATH` — per-instance config file
+- `LOCALCLAW_STATE_DIR` — per-instance sessions, creds, caches
 - `agents.defaults.workspace` — per-instance workspace root
 - `gateway.port` (or `--port`) — unique per instance
 - Derived ports (browser/canvas) must not overlap
@@ -22,23 +22,23 @@ If these are shared, you will hit config races and port conflicts.
 
 ## Recommended: profiles (`--profile`)
 
-Profiles auto-scope `OPENCLAW_STATE_DIR` + `OPENCLAW_CONFIG_PATH` and suffix service names.
+Profiles auto-scope `LOCALCLAW_STATE_DIR` + `LOCALCLAW_CONFIG_PATH` and suffix service names.
 
 ```bash
 # main
-openclaw --profile main setup
-openclaw --profile main gateway --port 18789
+localclaw --profile main setup
+localclaw --profile main gateway --port 18789
 
 # rescue
-openclaw --profile rescue setup
-openclaw --profile rescue gateway --port 19001
+localclaw --profile rescue setup
+localclaw --profile rescue gateway --port 19001
 ```
 
 Per-profile services:
 
 ```bash
-openclaw --profile main gateway install
-openclaw --profile rescue gateway install
+localclaw --profile main gateway install
+localclaw --profile rescue gateway install
 ```
 
 ## Rescue-bot guide
@@ -59,11 +59,11 @@ Port spacing: leave at least 20 ports between base ports so the derived browser/
 ```bash
 # Main bot (existing or fresh, without --profile param)
 # Runs on port 18789 + Chrome CDC/Canvas/... Ports
-openclaw onboard
-openclaw gateway install
+localclaw onboard
+localclaw gateway install
 
 # Rescue bot (isolated profile + ports)
-openclaw --profile rescue onboard
+localclaw --profile rescue onboard
 # Notes:
 # - workspace name will be postfixed with -rescue per default
 # - Port should be at least 18789 + 20 Ports,
@@ -71,12 +71,12 @@ openclaw --profile rescue onboard
 # - rest of the onboarding is the same as normal
 
 # To install the service (if not happened automatically during onboarding)
-openclaw --profile rescue gateway install
+localclaw --profile rescue gateway install
 ```
 
 ## Port mapping (derived)
 
-Base port = `gateway.port` (or `OPENCLAW_GATEWAY_PORT` / `--port`).
+Base port = `gateway.port` (or `LOCALCLAW_GATEWAY_PORT` / `--port`).
 
 - browser control service port = base + 2 (loopback only)
 - `canvasHost.port = base + 4`
@@ -94,19 +94,19 @@ If you override any of these in config or env, you must keep them unique per ins
 ## Manual env example
 
 ```bash
-OPENCLAW_CONFIG_PATH=~/.openclaw/main.json \
-OPENCLAW_STATE_DIR=~/.openclaw-main \
-openclaw gateway --port 18789
+LOCALCLAW_CONFIG_PATH=~/.localclaw/main.json \
+LOCALCLAW_STATE_DIR=~/.localclaw-main \
+localclaw gateway --port 18789
 
-OPENCLAW_CONFIG_PATH=~/.openclaw/rescue.json \
-OPENCLAW_STATE_DIR=~/.openclaw-rescue \
-openclaw gateway --port 19001
+LOCALCLAW_CONFIG_PATH=~/.localclaw/rescue.json \
+LOCALCLAW_STATE_DIR=~/.localclaw-rescue \
+localclaw gateway --port 19001
 ```
 
 ## Quick checks
 
 ```bash
-openclaw --profile main status
-openclaw --profile rescue status
-openclaw --profile rescue browser status
+localclaw --profile main status
+localclaw --profile rescue status
+localclaw --profile rescue browser status
 ```
