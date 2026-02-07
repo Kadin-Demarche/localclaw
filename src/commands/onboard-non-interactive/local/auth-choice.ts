@@ -12,6 +12,7 @@ import {
   applyAuthProfileConfig,
   applyCloudflareAiGatewayConfig,
   applyKimiCodeConfig,
+  applyLmStudioInstalledModelsConfig,
   applyMinimaxApiConfig,
   applyMinimaxConfig,
   applyMoonshotConfig,
@@ -40,6 +41,7 @@ import {
   setZaiApiKey,
 } from "../../onboard-auth.js";
 import { applyOpenAIConfig } from "../../openai-model-default.js";
+import { ensureSetupDefaultRouter } from "../../setup-default-router.js";
 import { resolveNonInteractiveApiKey } from "../api-keys.js";
 
 export async function applyNonInteractiveAuthChoice(params: {
@@ -492,7 +494,8 @@ export async function applyNonInteractiveAuthChoice(params: {
   }
 
   if (authChoice === "minimax") {
-    return applyMinimaxConfig(nextConfig);
+    const configWithLmStudioModels = await applyLmStudioInstalledModelsConfig(nextConfig);
+    return applyMinimaxConfig(configWithLmStudioModels);
   }
 
   if (authChoice === "opencode-zen") {
@@ -516,6 +519,10 @@ export async function applyNonInteractiveAuthChoice(params: {
       mode: "api_key",
     });
     return applyOpencodeZenConfig(nextConfig);
+  }
+
+  if (authChoice === "skip") {
+    return ensureSetupDefaultRouter(nextConfig).config;
   }
 
   if (

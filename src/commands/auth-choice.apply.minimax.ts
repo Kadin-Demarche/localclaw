@@ -9,6 +9,7 @@ import { applyAuthChoicePluginProvider } from "./auth-choice.apply.plugin-provid
 import { applyDefaultModelChoice } from "./auth-choice.default-model.js";
 import {
   applyAuthProfileConfig,
+  applyLmStudioInstalledModelsConfig,
   applyMinimaxApiConfig,
   applyMinimaxApiProviderConfig,
   applyMinimaxConfig,
@@ -98,6 +99,7 @@ export async function applyAuthChoiceMiniMax(
   }
 
   if (params.authChoice === "minimax") {
+    nextConfig = await applyLmStudioInstalledModelsConfig(nextConfig);
     const applied = await applyDefaultModelChoice({
       config: nextConfig,
       setDefaultModel: params.setDefaultModel,

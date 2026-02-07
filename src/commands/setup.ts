@@ -7,6 +7,7 @@ import { formatConfigPath, logConfigUpdated } from "../config/logging.js";
 import { resolveSessionTranscriptsDir } from "../config/sessions.js";
 import { defaultRuntime } from "../runtime.js";
 import { shortenHomePath } from "../utils.js";
+import { ensureSetupDefaultRouter } from "./setup-default-router.js";
 
 async function readConfigFileRaw(configPath: string): Promise<{
   exists: boolean;
@@ -51,13 +52,24 @@ export async function setupCommand(
       },
     },
   };
+  const withDefaultRouter = ensureSetupDefaultRouter(next);
+  const nextConfig = withDefaultRouter.config;
+  const workspaceChanged = defaults.workspace !== workspace;
 
-  if (!existingRaw.exists || defaults.workspace !== workspace) {
-    await writeConfigFile(next);
+  if (!existingRaw.exists || workspaceChanged || withDefaultRouter.applied) {
+    await writeConfigFile(nextConfig);
     if (!existingRaw.exists) {
       runtime.log(`Wrote ${formatConfigPath(configPath)}`);
     } else {
-      logConfigUpdated(runtime, { path: configPath, suffix: "(set agents.defaults.workspace)" });
+      const reasons: string[] = [];
+      if (workspaceChanged) {
+        reasons.push("set agents.defaults.workspace");
+      }
+      if (withDefaultRouter.applied) {
+        reasons.push("set default router to lmstudio/minimax-m2.1-gs32");
+      }
+      const suffix = reasons.length > 0 ? `(${reasons.join("; ")})` : undefined;
+      logConfigUpdated(runtime, { path: configPath, suffix });
     }
   } else {
     runtime.log(`Config OK: ${formatConfigPath(configPath)}`);
@@ -65,7 +77,7 @@ export async function setupCommand(
 
   const ws = await ensureAgentWorkspace({
     dir: workspace,
-    ensureBootstrapFiles: !next.agents?.defaults?.skipBootstrap,
+    ensureBootstrapFiles: !nextConfig.agents?.defaults?.skipBootstrap,
   });
   runtime.log(`Workspace OK: ${shortenHomePath(ws.dir)}`);
 

@@ -28,6 +28,7 @@ export {
   applyXaiProviderConfig,
 } from "./onboard-auth.config-core.js";
 export {
+  applyLmStudioInstalledModelsConfig,
   applyMinimaxApiConfig,
   applyMinimaxApiProviderConfig,
   applyMinimaxConfig,

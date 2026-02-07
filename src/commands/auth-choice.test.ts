@@ -140,6 +140,62 @@ describe("applyAuthChoice", () => {
     expect(parsed.profiles?.["minimax:default"]?.key).toBe("sk-minimax-test");
   });
 
+  it("discovers installed LM Studio models when selecting minimax", async () => {
+    tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), "localclaw-auth-"));
+    process.env.LOCALCLAW_STATE_DIR = tempStateDir;
+    process.env.LOCALCLAW_AGENT_DIR = path.join(tempStateDir, "agent");
+    process.env.PI_CODING_AGENT_DIR = process.env.LOCALCLAW_AGENT_DIR;
+
+    const fetchSpy = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          data: [
+            { id: "qwen3-14b-instruct", context_window: 131072, max_tokens: 8192 },
+            { id: "qwen3-14b-instruct" },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const prompter: WizardPrompter = {
+      intro: vi.fn(noopAsync),
+      outro: vi.fn(noopAsync),
+      note: vi.fn(noopAsync),
+      select: vi.fn(async () => "" as never),
+      multiselect: vi.fn(async () => []),
+      text: vi.fn(async () => ""),
+      confirm: vi.fn(async () => false),
+      progress: vi.fn(() => ({ update: noop, stop: noop })),
+    };
+    const runtime: RuntimeEnv = {
+      log: vi.fn(),
+      error: vi.fn(),
+      exit: vi.fn((code: number) => {
+        throw new Error(`exit:${code}`);
+      }),
+    };
+
+    const result = await applyAuthChoice({
+      authChoice: "minimax",
+      config: {},
+      prompter,
+      runtime,
+      setDefaultModel: true,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "http://127.0.0.1:1234/v1/models",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(result.config.models?.providers?.lmstudio?.models.map((model) => model.id)).toEqual([
+      "qwen3-14b-instruct",
+      "minimax-m2.1-gs32",
+    ]);
+    expect(result.config.agents?.defaults?.model?.primary).toBe("lmstudio/minimax-m2.1-gs32");
+  });
+
   it("prompts and writes Synthetic API key when selecting synthetic-api-key", async () => {
     tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), "localclaw-auth-"));
     process.env.LOCALCLAW_STATE_DIR = tempStateDir;

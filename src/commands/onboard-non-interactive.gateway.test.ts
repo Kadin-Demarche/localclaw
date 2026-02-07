@@ -176,10 +176,11 @@ describe("onboard (non-interactive): gateway and remote auth", () => {
     const configPath = resolveConfigPath(process.env, stateDir);
     const cfg = JSON.parse(await fs.readFile(configPath, "utf8")) as {
       gateway?: { auth?: { mode?: string; token?: string } };
-      agents?: { defaults?: { workspace?: string } };
+      agents?: { defaults?: { workspace?: string; model?: { primary?: string } } };
     };
 
     expect(cfg?.agents?.defaults?.workspace).toBe(workspace);
+    expect(cfg?.agents?.defaults?.model?.primary).toBe("lmstudio/minimax-m2.1-gs32");
     expect(cfg?.gateway?.auth?.mode).toBe("token");
     expect(cfg?.gateway?.auth?.token).toBe(token);
 

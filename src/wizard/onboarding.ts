@@ -30,6 +30,7 @@ import {
 import { setupInternalHooks } from "../commands/onboard-hooks.js";
 import { promptRemoteGatewayConfig } from "../commands/onboard-remote.js";
 import { setupSkills } from "../commands/onboard-skills.js";
+import { ensureSetupDefaultRouter } from "../commands/setup-default-router.js";
 import {
   DEFAULT_GATEWAY_PORT,
   readConfigFileSnapshot,
@@ -390,6 +391,9 @@ export async function runOnboardingWizard(
     },
   });
   nextConfig = authResult.config;
+  if (authChoice === "skip") {
+    nextConfig = ensureSetupDefaultRouter(nextConfig).config;
+  }
 
   if (authChoiceFromPrompt) {
     const modelSelection = await promptDefaultModel({
